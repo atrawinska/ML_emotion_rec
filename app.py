@@ -10,7 +10,7 @@ import os
 model = load_model("model.h5")
 
 # Emotion labels in order
-emotion_labels = ["neutral", "happy", "sad", "surprised", "mad", "disgusted", "scared"]
+emotion_labels = ["neutral", "happy", "sad", "surprised", "mad", "disgusted", "fearful"]
 
 class EmotionApp:
     def __init__(self, root):
