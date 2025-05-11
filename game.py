@@ -3,11 +3,13 @@ import tkinter as tk
 import random
 from PIL import Image, ImageTk
 
+from camera2 import EmotionDetector
+
 class Game:
     def __init__(self, root):
         self.root = root
         self.cell_size = 50
-        self.grid_size = 6
+        self.grid_size = 5
         self.canvas = None
         self.player_pos = [1, 1]
         self.player_img = None
@@ -17,24 +19,42 @@ class Game:
         self.canvas_fruit = None
         self.score = 0
         self.score_label = None
+        self.emotion_detector = EmotionDetector()
+        self.current_emotion = "neutral"
         
-        # Initialize UI elements
+        # Initialize UI elements first
         self.setup_score_display()
+        self.elements_init()  # Initialize canvas before emotion detection
+        
+        # Start emotion detection after UI is ready
+        self.setup_emotion_check()
         
     def setup_score_display(self):
         self.score_label = tk.Label(self.root, text=f"Score: {self.score}", font=("Arial", 14))
         self.score_label.pack()
 
-    def move_person(self, event):
+    def setup_emotion_check(self):
+        def check_emotion():
+            if self.canvas:  # Only proceed if canvas exists
+                self.current_emotion = self.emotion_detector.get_emotion()
+                self.move_person()
+            self.root.after(500, check_emotion)  # Continue checking every 500ms
+            
+        check_emotion()
+
+    def move_person(self, event=None):
+        if not self.canvas:  # Safety check
+            return
+            
         new_pos = self.player_pos.copy()
         
-        if event.keysym == "Up":
+        if self.current_emotion == "sad": #up
             new_pos[1] = max(0, self.player_pos[1] - 1)
-        elif event.keysym == "Down":
+        elif self.current_emotion == "happy": #down
             new_pos[1] = min(self.grid_size-1, self.player_pos[1] + 1)
-        elif event.keysym == "Left":
+        elif self.current_emotion == "mad": #left
             new_pos[0] = max(0, self.player_pos[0] - 1)
-        elif event.keysym == "Right":
+        elif self.current_emotion == "surprised": #right
             new_pos[0] = min(self.grid_size-1, self.player_pos[0] + 1)
         
         if new_pos != self.player_pos:
@@ -94,7 +114,7 @@ class Game:
 
         # Create game grid
         grid_frame = tk.Frame(self.root)
-        grid_frame.pack(pady=10)
+        grid_frame.pack()
 
         self.canvas = tk.Canvas(
             grid_frame,
@@ -125,6 +145,4 @@ class Game:
         # Add initial fruit
         self.move_fruit()
 
-        # Bind controls
-        self.root.bind("<KeyPress>", self.move_person)
         self.root.focus_set()
